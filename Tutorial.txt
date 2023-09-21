@@ -1,0 +1,44 @@
+sudo mokutil --sb-state
+
+sudo mkdir -p /var/lib/shim-signed/mok/
+cd /var/lib/shim-signed/mok/
+sudo openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -days 36500 -subj "/CN=Randomtech/" -nodes
+sudo mokutil --import /var/lib/shim-signed/mok/MOK.der
+
+Reboot
+
+sudo mokutil --test-key /var/lib/shim-signed/mok/MOK.der
+sudo dmesg | grep cert
+
+echo $PATH
+sudo nano /etc/profile.d/sbinpath.sh
+export PATH="$PATH:/usr/sbin"
+source /etc/profile
+command -pv modinfo
+
+uname -r
+apt search linux-headers-$(uname -r)
+ls -l /usr/src/linux-headers-$(uname -r)
+sudo apt install linux-headers-$(uname -r) -y
+
+which gcc make
+sudo apt install gcc make -y
+
+chmod +x VMware-Player-Full-17.0.2-21581411.x86_64.bundle
+sudo ./VMware-Player-Full-17.0.2-21581411.x86_64.bundle
+
+run wmware player
+
+ldd /usr/sbin/vmware-authdlauncher
+sudo nano /etc/ld.so.conf.d/vmware-authdlauncher.conf
+/usr/lib/vmware/lib/libssl.so.1.1
+/usr/lib/vmware/lib/libcrypto.so.1.1
+cat /etc/ld.so.conf.d/vmware-authdlauncher.conf
+libssl & libcrypto
+sudo ldconfig
+ldd /usr/sbin/vmware-authdlauncher
+
+sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file sha256 /var/lib/shim-signed/mok/MOK.priv /var/lib/shim-signed/mok/MOK.der $(modinfo -n vmmon)
+sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file sha256 /var/lib/shim-signed/mok/MOK.priv /var/lib/shim-signed/mok/MOK.der $(modinfo -n vmnet)
+sudo modprobe vmmon
+sudo systemctl start vmware
