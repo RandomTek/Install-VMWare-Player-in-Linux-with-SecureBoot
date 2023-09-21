@@ -1,44 +1,65 @@
+# Check if SecureBoot is enabled.
 sudo mokutil --sb-state
 
+# Create a folder for the key then generate it and import it.
 sudo mkdir -p /var/lib/shim-signed/mok/
 cd /var/lib/shim-signed/mok/
+# Be sure to change the CN.
 sudo openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -days 36500 -subj "/CN=Randomtech/" -nodes
 sudo mokutil --import /var/lib/shim-signed/mok/MOK.der
 
-Reboot
+# Reboot
+# Import the key.
 
+# Check if the key is imported properly.
 sudo mokutil --test-key /var/lib/shim-signed/mok/MOK.der
 sudo dmesg | grep cert
 
+# Check the path to verify if the sbin folder is included, because modprobe is needed. If the path isn't included then it must be added.
 echo $PATH
 sudo nano /etc/profile.d/sbinpath.sh
 export PATH="$PATH:/usr/sbin"
 source /etc/profile
 command -pv modinfo
 
+# Check for the linux header.
 uname -r
 apt search linux-headers-$(uname -r)
 ls -l /usr/src/linux-headers-$(uname -r)
+# Install them if they aren't installed.
 sudo apt install linux-headers-$(uname -r) -y
 
+# Check if the necesary packets for the bundle to build are installed.
 which gcc make
+# Install them if they are missing.
 sudo apt install gcc make -y
 
+# Prepare and install the bundle.
 chmod +x VMware-Player-Full-17.0.2-21581411.x86_64.bundle
 sudo ./VMware-Player-Full-17.0.2-21581411.x86_64.bundle
 
-run wmware player
+# Run wmware player.
 
+# Check if all the libraries are found and loaded.
 ldd /usr/sbin/vmware-authdlauncher
+# If any are missing close vmware player.
+# Add the usual two libraries, if they are missing.
 sudo nano /etc/ld.so.conf.d/vmware-authdlauncher.conf
 /usr/lib/vmware/lib/libssl.so.1.1
 /usr/lib/vmware/lib/libcrypto.so.1.1
+# Check if anything needs correction.
 cat /etc/ld.so.conf.d/vmware-authdlauncher.conf
-libssl & libcrypto
+# Link the new libraries.
 sudo ldconfig
+# Check again if all the libraries are found and loaded.
 ldd /usr/sbin/vmware-authdlauncher
 
+# Sign the modules.
 sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file sha256 /var/lib/shim-signed/mok/MOK.priv /var/lib/shim-signed/mok/MOK.der $(modinfo -n vmmon)
 sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file sha256 /var/lib/shim-signed/mok/MOK.priv /var/lib/shim-signed/mok/MOK.der $(modinfo -n vmnet)
+# Load the modules and start the service.
 sudo modprobe vmmon
+sudo modprobe vmnet
 sudo systemctl start vmware
+
+# Run wmware player.
