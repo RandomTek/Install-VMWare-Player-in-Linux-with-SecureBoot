@@ -34,7 +34,7 @@ which gcc make
 # Install them if they are missing.
 sudo apt install gcc make -y
 
-# Prepare and install the bundle.
+# Prepare and install the bundle (your version will probably be newer from this example).
 chmod +x VMware-Player-Full-17.0.2-21581411.x86_64.bundle
 sudo ./VMware-Player-Full-17.0.2-21581411.x86_64.bundle
 
@@ -43,7 +43,7 @@ sudo ./VMware-Player-Full-17.0.2-21581411.x86_64.bundle
 # Check if all the libraries are found and loaded.
 ldd /usr/sbin/vmware-authdlauncher
 # If any are missing close vmware player.
-# Add the usual two libraries, if they are missing.
+# Add the most common two missing libraries, if they are absent at the end of the file.
 sudo nano /etc/ld.so.conf.d/vmware-authdlauncher.conf
 /usr/lib/vmware/lib/libssl.so.1.1
 /usr/lib/vmware/lib/libcrypto.so.1.1
